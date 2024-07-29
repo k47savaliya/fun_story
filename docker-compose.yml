@@ -1,0 +1,36 @@
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=post12345
+      - POSTGRES_DB=story_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fun_story
+
+  # story:
+  #   build:
+  #     context: .
+  #   image: story
+  #   container_name: story
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - "8008:8008"
+  #   command: uvicorn server.app:app --port 8008 --host 0.0.0.0
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - fun_story
+
+volumes:
+  postgres_data:
+
+networks:
+  fun_story:
