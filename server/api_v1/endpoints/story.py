@@ -17,7 +17,7 @@ from ..deps import get_db
 
 story_router = APIRouter()
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
-ALLOWED_EXTENSIONS = {".png", ".jpeg", ".jpg"}
+ALLOWED_EXTENSIONS = [".png", ".jpeg", ".jpg"]
 
 imagekit = ImageKit(
     private_key=settings.IMAGEKIT_PRIVATE_KEY,
@@ -93,8 +93,8 @@ def create_story(
 
 @story_router.post("/upload-image")
 def upload_image(
-    image: UploadFile = File(...),
-    title: str = Form(),
+    image: Optional[UploadFile] = File(default=None),
+    title: str = Form(...),
     created_by: Optional[str] = Form(default=None),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
@@ -102,8 +102,16 @@ def upload_image(
     """
     Upload an image
     """
-
     try:
+        if not image:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": "No file was uploaded.",
+                },
+            )
+
         # Validate file type
         file_extension = os.path.splitext(image.filename)[1].lower()
         if file_extension not in ALLOWED_EXTENSIONS:
@@ -115,8 +123,11 @@ def upload_image(
                 },
             )
 
+        # Read the image file
+        image_data = image.file.read()
+
         # Validate image size
-        image_size = len(image.file.read())
+        image_size = len(image_data)
         if image_size > MAX_IMAGE_SIZE:
             return JSONResponse(
                 status_code=400,
@@ -125,18 +136,20 @@ def upload_image(
                     "message": "Image size exceeds the allowed limit of 5MB.",
                 },
             )
-        
+
+        # Generate a unique file ID
         file_id = str(uuid.uuid4())
         
-        image_data = image.file.read()
+        # Upload the image to ImageKit
         image_result = imagekit.upload_file(
             file=base64.b64encode(image_data).decode(),
-            file_name=f"{file_id}_image",
+            file_name=f"image_{file_id}",
             options=options,
         )
 
-        image_path = image_result.__dict__
-        image_path = image_path.get("url")
+        image_path = image_result.__dict__.get("url")
+
+        # Create the story object in the database
         story_obj = crud.story.create(
             db,
             obj_in=schemas.StoryBase(
@@ -155,7 +168,7 @@ def upload_image(
                 "message": "Image uploaded successfully!",
             },
         )
-    
+
     except HTTPException:
         raise
 

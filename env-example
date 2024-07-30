@@ -1,1 +1,6 @@
 SQLALCHEMY_DATABASE_URI=''
+
+# Image kitio creds for your testing purpose
+IMAGEKIT_PUBLIC_KEY="public_0HEDkoGcrCBIYm+OzezMej63a4g="
+IMAGEKIT_PRIVATE_KEY="private_OicuoP8Ffb8bGFhrus8Bt7hxRiU="
+IMAGEKIT_UPLOAD_URL="https://ik.imagekit.io/4vzqpebdc"

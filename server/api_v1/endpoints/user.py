@@ -226,13 +226,16 @@ async def change_password(
             data={"sub": user_obj.email, "id": user_obj.id},
             expires_delta=access_token_expires,
         )
+        refresh_token = create_refresh_token(
+            data={"sub": user_obj.email, "id": user_obj.id}
+        )
 
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
                 "message": "Password changed successfully",
-                "data": {"token": access_token, "token_type": "bearer"},
+                "data": {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"},
             },
         )
 
